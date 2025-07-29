@@ -1,20 +1,12 @@
-const CACHE_NAME = 'product-management-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
-];
-
 // Instalación del Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(product-management-v1)
       .then(cache => {
-        return cache.addAll(ASSETS_TO_CACHE);
+        return cache.addAll(['/index.html','https://cdn.tailwindcss.com',
+  'https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css']);
       })
-      .then(() => self.skipWaiting())
   );
 });
 

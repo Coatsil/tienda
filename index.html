@@ -7,6 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -66,7 +74,7 @@
             border-radius: 8px;
         }
 
-        /* Mejoras responsive */
+        /* Responsive improvements */
         @media (max-width: 640px) {
             .nav-tabs {
                 overflow-x: auto;
@@ -93,23 +101,13 @@
             }
         }
     </style>
-    <!-- Manifest para PWA -->
-    <link rel="manifest" href="/manifest.json">
-
-    <!-- Icono para iOS -->
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-
-    <!-- Configuración para iOS -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
 </head>
 <body class="min-h-screen">
     <!-- Auth Screen -->
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 auth-bg">
         <div class="w-full max-w-md bg-white rounded-xl p-8 card">
             <div class="text-center mb-8">
-                <img src="Tienda.webp" alt="Logo del sistema con diseño moderno en azul y verde con un icono de escaneo de código de barras" class="mx-auto rounded-full p-9 border-8 border-blue-500" />
+                <img src="Tienda.webp" alt="Logo del sistema" class="mx-auto rounded-full p-9 border-8 border-blue-400" />
                 <h1 class="text-3xl font-bold text-gray-800 mt-4">Sistema de Productos</h1>
                 <p class="text-gray-600 mt-2">Inicie sesión para acceder al sistema</p>
             </div>
@@ -125,13 +123,9 @@
                     <input type="password" id="password" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="admin-login" type="button" class="w-full flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        <i class="fas fa-user-shield mr-2"></i> Admin
-                    </button>
-                    
-                    <button id="user-login" type="button" class="w-full flex justify-center items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                        <i class="fas fa-user mr-2"></i> Consultor
+                <div>
+                    <button type="submit" class="w-full flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
                     </button>
                 </div>
             </form>
@@ -144,10 +138,11 @@
         <header class="bg-white shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiXOG-yZ3klRiG1Xiiy-4VpbPoosUuOVRXx7dM039m7nxgXd09f1EQ1u6XKNg_-cDEKzuARE11U_7CfjSGjf0llRXCHXUfsTSphvbBuupabiGMaGYIb66MIux9VmCET9hY4fIqyDA3KlYQ/s16000/La+marca+del+producto+Definici%25C3%25B3n%252C+clasificaci%25C3%25B3n%252C+c%25C3%25B3mo+nacen+y+m%25C3%25A1s.jpg" alt="Pequeño logo de la aplicación con símbolo de código de barras y herramientas de gestión" class="h-8 w-auto" />
+                    <img src="https://placehold.co/50x50" alt="Logo" class="h-8 w-auto" />
                     <h1 class="ml-3 text-xl font-bold text-gray-900">Gestión de Productos</h1>
                 </div>
-                <div>
+                <div class="flex items-center space-x-4">
+                    <div id="user-display" class="flex items-center text-sm text-gray-700"></div>
                     <button id="logout-btn" class="flex items-center text-gray-600 hover:text-gray-900">
                         <i class="fas fa-sign-out-alt mr-2"></i>
                         <span>Cerrar sesión</span>
@@ -310,12 +305,15 @@
                             <div>
                                 <label for="product-category" class="block text-sm font-medium text-gray-700">Categoría</label>
                                 <select id="product-category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="electronics">Electrónicos</option>
-                                    <option value="food">Alimentos</option>
-                                    <option value="beverages">Bebidas</option>
-                                    <option value="cleaning">Limpieza</option>
-                                    <option value="personal-care">Cuidado personal</option>
-                                    <option value="other">Otros</option>
+                                    <option value="lacteos">Lácteos</option>
+                                    <option value="bebidas">Bebidas</option>
+                                    <option value="botanas">Botanas</option>
+                                    <option value="limpieza">Limpieza</option>
+                                    <option value="cuidado-personal">Cuidado Personal</option>
+                                    <option value="panaderia">Panadería</option>
+                                    <option value="dulces">Dulces</option>
+                                    <option value="bebidas-alcoholicas">Bebidas Alcohólicas</option>
+                                    <option value="otros">Otros</option>
                                 </select>
                             </div>
                             
@@ -327,6 +325,11 @@
                             <div>
                                 <label for="product-stock" class="block text-sm font-medium text-gray-700">Cantidad en Stock</label>
                                 <input type="number" id="product-stock" min="1" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="product-min-stock" class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
+                                <input type="number" id="product-min-stock" min="1" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             
                             <div>
@@ -400,12 +403,15 @@
                                 <div>
                                     <label for="edit-product-category" class="block text-sm font-medium text-gray-700">Categoría</label>
                                     <select id="edit-product-category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="electronics">Electrónicos</option>
-                                        <option value="food">Alimentos</option>
-                                        <option value="beverages">Bebidas</option>
-                                        <option value="cleaning">Limpieza</option>
-                                        <option value="personal-care">Cuidado personal</option>
-                                        <option value="other">Otros</option>
+                                        <option value="lacteos">Lácteos</option>
+                                        <option value="bebidas">Bebidas</option>
+                                        <option value="botanas">Botanas</option>
+                                        <option value="limpieza">Limpieza</option>
+                                        <option value="cuidado-personal">Cuidado Personal</option>
+                                        <option value="panaderia">Panadería</option>
+                                        <option value="dulces">Dulces</option>
+                                        <option value="bebidas-alcoholicas">Bebidas Alcohólicas</option>
+                                        <option value="otros">Otros</option>
                                     </select>
                                 </div>
                                 
@@ -417,6 +423,11 @@
                                 <div>
                                     <label for="edit-product-stock" class="block text-sm font-medium text-gray-700">Cantidad en Stock</label>
                                     <input type="number" id="edit-product-stock" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-min-stock" class="block text-sm font-medium text-gray-700">Stock Mínimo</label>
+                                    <input type="number" id="edit-product-min-stock" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                 </div>
                                 
                                 <div>
@@ -448,7 +459,39 @@
     </div>
 
     <script>
-        // Productos de ejemplo para una tienda
+        // Base de datos de usuarios
+        const users = [
+            {
+                username: 'admin',
+                password: 'admin123', // En una app real, esto debería estar encriptado
+                role: 'admin',
+                name: 'Administrador',
+                permissions: ['view', 'edit', 'register', 'delete']
+            },
+            {
+                username: 'inventario',
+                password: 'inv123',
+                role: 'inventory',
+                name: 'Responsable de Inventario',
+                permissions: ['view', 'edit', 'register']
+            },
+            {
+                username: 'consulta',
+                password: 'consulta123',
+                role: 'consultor',
+                name: 'Consultor',
+                permissions: ['view']
+            },
+            {
+                username: 'vendedor',
+                password: 'vende123',
+                role: 'seller',
+                name: 'Vendedor',
+                permissions: ['view', 'sell']
+            }
+        ];
+
+        // Listado de 80 productos
         const products = [
             {
                 code: '7501055300109',
@@ -1095,8 +1138,7 @@
         const authScreen = document.getElementById('auth-screen');
         const app = document.getElementById('app');
         const logoutBtn = document.getElementById('logout-btn');
-        const adminLoginBtn = document.getElementById('admin-login');
-        const userLoginBtn = document.getElementById('user-login');
+        const loginForm = document.getElementById('login-form');
         
         // Tab elements
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1141,8 +1183,7 @@
         // Initialize the application
         function init() {
             // Event listeners for login
-            adminLoginBtn.addEventListener('click', () => login('admin'));
-            userLoginBtn.addEventListener('click', () => login('consultor'));
+            loginForm.addEventListener('submit', login);
             logoutBtn.addEventListener('click', logout);
             
             // Tab switching
@@ -1179,7 +1220,9 @@
         }
         
         // Login function
-        function login(role) {
+        function login(e) {
+            e.preventDefault();
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
@@ -1188,28 +1231,66 @@
                 return;
             }
             
-            // Simple validation (in a real app, this would call an API)
-            currentUser = {
-                username,
-                role
-            };
+            // Buscar usuario en la base de datos
+            const user = users.find(u => u.username === username && u.password === password);
             
-            // Hide auth screen and show app
-            authScreen.classList.add('hidden');
-            app.classList.remove('hidden');
-            
-            // Set appropriate UI based on user role
-            if (role === 'admin') {
-                // Admin has access to all tabs
-                document.getElementById('register-tab').style.display = 'block';
-                document.getElementById('edit-tab').style.display = 'block';
-            } else {
-                // Consultant can only view scanner and products
-                document.getElementById('register-tab').style.display = 'none';
-                document.getElementById('edit-tab').style.display = 'none';
+            if (user) {
+                currentUser = {
+                    username: user.username,
+                    role: user.role,
+                    name: user.name,
+                    permissions: user.permissions
+                };
                 
-                // Set first available tab active
-                switchTab('barcode');
+                // Hide auth screen and show app
+                authScreen.classList.add('hidden');
+                app.classList.remove('hidden');
+                
+                // Configurar UI según permisos
+                setupUIForUser();
+                
+                // Mostrar bienvenida
+                alert(`Bienvenido ${user.name}`);
+            } else {
+                alert('Usuario o contraseña incorrectos');
+            }
+        }
+        
+        // Configurar la interfaz según los permisos del usuario
+        function setupUIForUser() {
+            // Actualizar display del usuario
+            const userDisplay = document.getElementById('user-display');
+            userDisplay.innerHTML = `
+                <i class="fas fa-user-circle mr-2"></i>
+                <span>${currentUser.name} (${currentUser.role})</span>
+            `;
+            
+            // Mostrar/ocultar tabs según permisos
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                const tabId = tab.dataset.tab;
+                const tabContent = document.getElementById(`${tabId}-tab`);
+                
+                if (tabId === 'barcode' || tabId === 'products') {
+                    // Estos tabs son visibles para todos
+                    return;
+                }
+                
+                if (tabId === 'register' && currentUser.permissions.includes('register')) {
+                    tab.style.display = 'block';
+                    tabContent.style.display = 'block';
+                } else if (tabId === 'edit' && currentUser.permissions.includes('edit')) {
+                    tab.style.display = 'block';
+                    tabContent.style.display = 'block';
+                } else {
+                    tab.style.display = 'none';
+                    tabContent.style.display = 'none';
+                }
+            });
+            
+            // Activar el primer tab disponible
+            const firstVisibleTab = document.querySelector('.tab-btn:not([style*="display: none"])');
+            if (firstVisibleTab) {
+                switchTab(firstVisibleTab.dataset.tab);
             }
         }
         
@@ -1369,6 +1450,7 @@
                     { label: 'Categoría', value: getCategoryName(product.category) },
                     { label: 'Precio', value: `$${product.price.toFixed(2)}` },
                     { label: 'Stock', value: product.stock },
+                    { label: 'Stock Mínimo', value: product.minStock },
                     { label: 'Descripción', value: product.description }
                 ];
                 
@@ -1393,12 +1475,15 @@
         
         function getCategoryName(category) {
             const categories = {
-                'electronics': 'Electrónicos',
-                'food': 'Alimentos',
-                'beverages': 'Bebidas',
-                'cleaning': 'Limpieza',
-                'personal-care': 'Cuidado personal',
-                'other': 'Otros'
+                'lacteos': 'Lácteos',
+                'bebidas': 'Bebidas',
+                'botanas': 'Botanas',
+                'limpieza': 'Limpieza',
+                'cuidado-personal': 'Cuidado Personal',
+                'panaderia': 'Panadería',
+                'dulces': 'Dulces',
+                'bebidas-alcoholicas': 'Bebidas Alcohólicas',
+                'otros': 'Otros'
             };
             return categories[category] || category;
         }
@@ -1432,10 +1517,10 @@
                     let stockStatus = '';
                     let statusClass = '';
                     
-                    if (product.stock <= 5) {
+                    if (product.stock <= product.minStock) {
                         stockStatus = 'Bajo stock';
                         statusClass = 'bg-red-100 text-red-800';
-                    } else if (product.stock <= 15) {
+                    } else if (product.stock <= (product.minStock * 2)) {
                         stockStatus = 'Stock moderado';
                         statusClass = 'bg-yellow-100 text-yellow-800';
                     } else {
@@ -1485,13 +1570,13 @@
                 let matchesStock = true;
                 switch(filterValue) {
                     case 'low':
-                        matchesStock = product.stock <= 5;
+                        matchesStock = product.stock <= product.minStock;
                         break;
                     case 'medium':
-                        matchesStock = product.stock > 5 && product.stock <= 15;
+                        matchesStock = product.stock > product.minStock && product.stock <= (product.minStock * 2);
                         break;
                     case 'high':
-                        matchesStock = product.stock > 15;
+                        matchesStock = product.stock > (product.minStock * 2);
                         break;
                     default:
                         matchesStock = true;
@@ -1518,17 +1603,27 @@
         function registerNewProduct(e) {
             e.preventDefault();
             
+            if (!currentUser.permissions.includes('register')) {
+                alert('No tienes permisos para registrar productos');
+                return;
+            }
+            
             const code = document.getElementById('product-code').value;
             const name = document.getElementById('product-name').value;
             const category = document.getElementById('product-category').value;
             const price = parseFloat(document.getElementById('product-price').value);
             const stock = parseInt(document.getElementById('product-stock').value);
+            const minStock = parseInt(document.getElementById('product-min-stock').value);
             const description = document.getElementById('product-description').value;
-            // Note: Image handling would be added in a real application
             
             // Validate inputs
-            if (!code || !name || isNaN(price) || isNaN(stock)) {
+            if (!code || !name || isNaN(price) || isNaN(stock) || isNaN(minStock)) {
                 alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            if (stock < 1 || minStock < 1) {
+                alert('El stock y stock mínimo deben ser al menos 1');
                 return;
             }
             
@@ -1545,6 +1640,7 @@
                 category,
                 price,
                 stock,
+                minStock,
                 description
             };
             
@@ -1565,6 +1661,11 @@
         
         // Edit product functions
         function searchProductsForEdit() {
+            if (!currentUser.permissions.includes('edit')) {
+                alert('No tienes permisos para editar productos');
+                return;
+            }
+            
             const searchTerm = searchEditProductInput.value.toLowerCase();
             
             // Clear previous results
@@ -1621,6 +1722,7 @@
                 document.getElementById('edit-product-category').value = product.category;
                 document.getElementById('edit-product-price').value = product.price;
                 document.getElementById('edit-product-stock').value = product.stock;
+                document.getElementById('edit-product-min-stock').value = product.minStock;
                 document.getElementById('edit-product-description').value = product.description || '';
                 
                 // Show the edit form
@@ -1639,12 +1741,29 @@
         function updateProduct(e) {
             e.preventDefault();
             
+            if (!currentUser.permissions.includes('edit')) {
+                alert('No tienes permisos para editar productos');
+                return;
+            }
+            
             const code = document.getElementById('edit-product-code').value;
             const name = document.getElementById('edit-product-name').value;
             const category = document.getElementById('edit-product-category').value;
             const price = parseFloat(document.getElementById('edit-product-price').value);
             const stock = parseInt(document.getElementById('edit-product-stock').value);
+            const minStock = parseInt(document.getElementById('edit-product-min-stock').value);
             const description = document.getElementById('edit-product-description').value;
+            
+            // Validate inputs
+            if (!code || !name || isNaN(price) || isNaN(stock) || isNaN(minStock)) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            if (stock < 1 || minStock < 1) {
+                alert('El stock y stock mínimo deben ser al menos 1');
+                return;
+            }
             
             // Find the product index
             const productIndex = products.findIndex(p => p.code === code);
@@ -1657,6 +1776,7 @@
                     category,
                     price,
                     stock,
+                    minStock,
                     description
                 };
                 
@@ -1677,16 +1797,16 @@
         // Initialize the app
         document.addEventListener('DOMContentLoaded', init);
 
-        // Registrar el Service Worker
+        // Registrar el Service Worker para PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                console.log('ServiceWorker registration successful');
-                })
-                .catch(err => {
-                console.log('ServiceWorker registration failed: ', err);
-                });
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
             });
         }
 
@@ -1704,19 +1824,18 @@
             installButton.classList.remove('hidden');
             
             installButton.addEventListener('click', () => {
-            installButton.classList.add('hidden');
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted install prompt');
-                } else {
-                console.log('User dismissed install prompt');
-                }
-                deferredPrompt = null;
-            });
+                installButton.classList.add('hidden');
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install prompt');
+                    } else {
+                        console.log('User dismissed install prompt');
+                    }
+                    deferredPrompt = null;
+                });
             });
         });
-
     </script>
 </body>
 </html>

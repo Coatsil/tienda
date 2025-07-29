@@ -9,24 +9,88 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icono1.png",
+      "src": "icons/icono1.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icono1.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icono1.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icono2.png",
       "sizes": "144x144",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icono2.png",
+      "src": "icons/icono2.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icono2.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icono3.png",
+      "src": "icons/icono3.png",
       "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icono4.png",
+      "src": "icons/icono3.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/icono4.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "description": "Pantalla principal del sistema"
+    },
+    {
+      "src": "screenshots/icono4.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "description": "Escáner de códigos de barras"
+    }
+  ],
+  "features": [
+    "Escáner de códigos de barras",
+    "Gestión de inventario",
+    "Funcionamiento offline"
+  ],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "Escáner",
+      "url": "/#barcode-tab",
+      "description": "Escanear código de barras"
+    },
+    {
+      "name": "Registrar Producto",
+      "url": "/#register-tab",
+      "description": "Agregar nuevo producto"
     }
   ]
 }

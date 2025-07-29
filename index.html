@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Productos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            transition: all 0.3s ease;
+        }
+        
+        .auth-bg {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .btn-success {
+            background-color: var(--secondary-color);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .active-tab {
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        #barcode-scanner {
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+        }
+
+        /* Mejoras responsive */
+        @media (max-width: 640px) {
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 8px;
+            }
+            
+            .tab-btn {
+                display: inline-block;
+                padding: 12px 8px;
+            }
+            
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .edit-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+    <!-- Manifest para PWA -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icono para iOS -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Configuración para iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+</head>
+<body class="min-h-screen">
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 auth-bg">
+        <div class="w-full max-w-md bg-white rounded-xl p-8 card">
+            <div class="text-center mb-8">
+                <img src="Tienda.webp" alt="Logo del sistema con diseño moderno en azul y verde con un icono de escaneo de código de barras" class="mx-auto rounded-full p-9 border-8 border-blue-500" />
+                <h1 class="text-3xl font-bold text-gray-800 mt-4">Sistema de Productos</h1>
+                <p class="text-gray-600 mt-2">Inicie sesión para acceder al sistema</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Usuario</label>
+                    <input type="text" id="username" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="password" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="admin-login" type="button" class="w-full flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <i class="fas fa-user-shield mr-2"></i> Admin
+                    </button>
+                    
+                    <button id="user-login" type="button" class="w-full flex justify-center items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        <i class="fas fa-user mr-2"></i> Consultor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Main App (Hidden by default) -->
+    <div id="app" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiXOG-yZ3klRiG1Xiiy-4VpbPoosUuOVRXx7dM039m7nxgXd09f1EQ1u6XKNg_-cDEKzuARE11U_7CfjSGjf0llRXCHXUfsTSphvbBuupabiGMaGYIb66MIux9VmCET9hY4fIqyDA3KlYQ/s16000/La+marca+del+producto+Definici%25C3%25B3n%252C+clasificaci%25C3%25B3n%252C+c%25C3%25B3mo+nacen+y+m%25C3%25A1s.jpg" alt="Pequeño logo de la aplicación con símbolo de código de barras y herramientas de gestión" class="h-8 w-auto" />
+                    <h1 class="ml-3 text-xl font-bold text-gray-900">Gestión de Productos</h1>
+                </div>
+                <div>
+                    <button id="logout-btn" class="flex items-center text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b border-gray-200 nav-tabs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex space-x-8">
+                    <button data-tab="barcode" class="tab-btn active-tab py-4 px-1 text-sm font-medium text-gray-900 border-b-2 border-transparent hover:border-gray-300">
+                        <i class="fas fa-barcode mr-2"></i>Escáner
+                    </button>
+                    <button data-tab="products" class="tab-btn py-4 px-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-gray-300">
+                        <i class="fas fa-boxes mr-2"></i>Productos
+                    </button>
+                    <button data-tab="register" id="register-tab" class="tab-btn py-4 px-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-gray-300">
+                        <i class="fas fa-plus-circle mr-2"></i>Registrar
+                    </button>
+                    <button data-tab="edit" id="edit-tab" class="tab-btn py-4 px-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:border-gray-300">
+                        <i class="fas fa-edit mr-2"></i>Editar
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="flex-grow bg-gray-50">
+            <!-- Barcode Scanner Tab -->
+            <div id="barcode-tab" class="tab-content py-6 px-4 sm:px-6 lg:px-8">
+                <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-6 card">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Escáner de Código de Barras</h2>
+                        <p class="text-gray-600">Escanea el código de barras de un producto para ver su información</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 product-grid">
+                        <div>
+                            <div id="barcode-scanner" class="w-full h-64 flex items-center justify-center mb-4">
+                                <p class="text-gray-500">El escáner se activará aquí</p>
+                            </div>
+                            <button id="start-scanner" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <i class="fas fa-camera mr-2"></i> Activar Escáner
+                            </button>
+                            <button id="stop-scanner" class="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 mt-2 hidden">
+                                <i class="fas fa-stop mr-2"></i> Detener Escáner
+                            </button>
+                            <div class="mt-4">
+                                <label for="manual-barcode" class="block text-sm font-medium text-gray-700">O ingrese manualmente:</label>
+                                <input type="text" id="manual-barcode" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <button id="manual-search" class="mt-2 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                    <i class="fas fa-search mr-2"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="product-info" class="bg-gray-100 rounded-lg p-4 hidden">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Información del Producto</h3>
+                            <div id="product-details" class="grid grid-cols-2 gap-3">
+                                <!-- Product details will be filled here dynamically -->
+                            </div>
+                            <div class="mt-4 flex justify-end">
+                                <button id="close-info" class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Products List Tab -->
+            <div id="products-tab" class="tab-content py-6 px-4 sm:px-6 lg:px-8 hidden">
+                <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-sm p-6 card">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Lista de Productos</h2>
+                        <p class="text-gray-600">Todos los productos registrados en el sistema</p>
+                    </div>
+                    
+                    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="product-search" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <label for="product-filter" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por:</label>
+                            <select id="product-filter" class="border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1 pl-2 pr-8 w-full sm:w-auto">
+                                <option value="all">Todos</option>
+                                <option value="low">Bajo stock</option>
+                                <option value="medium">Stock moderado</option>
+                                <option value="high">Stock alto</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Products will be loaded here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-sm text-gray-500">
+                            Mostrando <span id="products-start">1</span> a <span id="products-end">10</span> de <span id="products-total">0</span> productos
+                        </div>
+                        <div class="flex space-x-2">
+                            <button id="products-prev" class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                Anterior
+                            </button>
+                            <button id="products-next" class="px-3 py-1 border border-gray-300 rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                Siguiente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Register Product Tab -->
+            <div id="register-tab" class="tab-content py-6 px-4 sm:px-6 lg:px-8 hidden">
+                <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-6 card">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Registrar Nuevo Producto</h2>
+                        <p class="text-gray-600">Complete los datos para registrar un nuevo producto en el sistema</p>
+                    </div>
+                    
+                    <form id="register-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label for="product-code" class="block text-sm font-medium text-gray-700">Código de Barras</label>
+                                <div class="mt-1 flex">
+                                    <input type="text" id="product-code" required class="flex-grow px-4 py-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <button type="button" id="scan-for-register" class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="product-name" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                                <input type="text" id="product-name" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="product-category" class="block text-sm font-medium text-gray-700">Categoría</label>
+                                <select id="product-category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="electronics">Electrónicos</option>
+                                    <option value="food">Alimentos</option>
+                                    <option value="beverages">Bebidas</option>
+                                    <option value="cleaning">Limpieza</option>
+                                    <option value="personal-care">Cuidado personal</option>
+                                    <option value="other">Otros</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="product-price" class="block text-sm font-medium text-gray-700">Precio</label>
+                                <input type="number" step="0.01" id="product-price" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="product-stock" class="block text-sm font-medium text-gray-700">Cantidad en Stock</label>
+                                <input type="number" id="product-stock" min="1" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label for="product-image" class="block text-sm font-medium text-gray-700">Imagen del Producto</label>
+                                <input type="file" id="product-image" accept="image/*" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="product-description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                            <textarea id="product-description" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <i class="fas fa-save mr-2"></i> Registrar Producto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Edit Product Tab -->
+            <div id="edit-tab" class="tab-content py-6 px-4 sm:px-6 lg:px-8 hidden">
+                <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm p-6 card">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Editar Producto</h2>
+                        <p class="text-gray-600">Busque un producto para editar su información</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 edit-grid">
+                        <div>
+                            <div class="mb-4">
+                                <label for="search-edit-product" class="block text-sm font-medium text-gray-700">Buscar Producto</label>
+                                <div class="mt-1 relative flex">
+                                    <input type="text" id="search-edit-product" class="flex-grow px-4 py-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                    <button id="search-edit-btn" class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-y-auto max-h-96 border border-gray-200 rounded-md">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                            <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seleccionar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="edit-products-list" class="bg-white divide-y divide-gray-200">
+                                        <!-- Edit products list will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="edit-product-form-container" class="hidden">
+                            <form id="edit-product-form" class="space-y-4">
+                                <div>
+                                    <label for="edit-product-code" class="block text-sm font-medium text-gray-700">Código de Barras</label>
+                                    <input type="text" id="edit-product-code" readonly class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-gray-100 rounded-md shadow-sm">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-name" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                                    <input type="text" id="edit-product-name" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-category" class="block text-sm font-medium text-gray-700">Categoría</label>
+                                    <select id="edit-product-category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="electronics">Electrónicos</option>
+                                        <option value="food">Alimentos</option>
+                                        <option value="beverages">Bebidas</option>
+                                        <option value="cleaning">Limpieza</option>
+                                        <option value="personal-care">Cuidado personal</option>
+                                        <option value="other">Otros</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-price" class="block text-sm font-medium text-gray-700">Precio</label>
+                                    <input type="number" step="0.01" id="edit-product-price" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-stock" class="block text-sm font-medium text-gray-700">Cantidad en Stock</label>
+                                    <input type="number" id="edit-product-stock" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="edit-product-description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                                    <textarea id="edit-product-description" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                </div>
+                                
+                                <div class="flex justify-end space-x-3 pt-2">
+                                    <button type="button" id="cancel-edit" class="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <i class="fas fa-save mr-2"></i> Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-white py-4 border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+                <p>Sistema de Gestión de Productos © 2023. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Productos de ejemplo para una tienda
+        const products = [
+            {
+                code: '7501055300109',
+                name: 'Leche Entera Alpura 1L',
+                category: 'lacteos',
+                price: 25.50,
+                stock: 24,
+                description: 'Leche entera pasteurizada',
+                minStock: 10
+            },
+            {
+                code: '7501033911300',
+                name: 'Coca-Cola 600ml',
+                category: 'bebidas',
+                price: 18.00,
+                stock: 36,
+                description: 'Refresco de cola',
+                minStock: 15
+            },
+            {
+                code: '7501003123456',
+                name: 'Sabritas Original 45g',
+                category: 'botanas',
+                price: 15.00,
+                stock: 18,
+                description: 'Papas fritas sabor original',
+                minStock: 12
+            },
+            {
+                code: '7501059245123',
+                name: 'Ariel Detergente 1kg',
+                category: 'limpieza',
+                price: 45.90,
+                stock: 12,
+                description: 'Detergente para ropa',
+                minStock: 5
+            },
+            {
+                code: '7506306237890',
+                name: 'Colgate Total 120g',
+                category: 'cuidado-personal',
+                price: 32.50,
+                stock: 15,
+                description: 'Pasta dental',
+                minStock: 8
+            },
+            {
+                code: '7501055301236',
+                name: 'Huevo San Juan 18pz',
+                category: 'lacteos',
+                price: 48.00,
+                stock: 8,
+                description: 'Huevos blancos',
+                minStock: 5
+            },
+            {
+                code: '7501033914567',
+                name: 'Agua Ciel 1L',
+                category: 'bebidas',
+                price: 12.00,
+                stock: 30,
+                description: 'Agua purificada',
+                minStock: 20
+            },
+            {
+                code: '7501055312345',
+                name: 'Yoghurt Danone Natural 1kg',
+                category: 'lacteos',
+                price: 38.50,
+                stock: 10,
+                description: 'Yoghurt natural',
+                minStock: 6
+            },
+            {
+                code: '7501050623456',
+                name: 'Pan Bimbo Blanco Grande',
+                category: 'panaderia',
+                price: 42.00,
+                stock: 14,
+                description: 'Pan de caja blanco',
+                minStock: 8
+            },
+            {
+                code: '7501050789012',
+                name: 'Galletas Oreo 156g',
+                category: 'dulces',
+                price: 22.50,
+                stock: 20,
+                description: 'Galletas sabor chocolate',
+                minStock: 10
+            },
+            // Continúa con más productos...
+            {
+                code: '7501055300451',
+                name: 'Queso Crema Philadelphia 190g',
+                category: 'lacteos',
+                price: 35.00,
+                stock: 12,
+                description: 'Queso crema para untar',
+                minStock: 6
+            },
+            {
+                code: '7501033912345',
+                name: 'Pepsi 600ml',
+                category: 'bebidas',
+                price: 17.50,
+                stock: 25,
+                description: 'Refresco de cola',
+                minStock: 12
+            },
+            {
+                code: '7501003123789',
+                name: 'Ruffles Queso 45g',
+                category: 'botanas',
+                price: 16.00,
+                stock: 15,
+                description: 'Papas fritas sabor queso',
+                minStock: 10
+            },
+            {
+                code: '7501059245234',
+                name: 'Cloro Pinol 1L',
+                category: 'limpieza',
+                price: 28.00,
+                stock: 8,
+                description: 'Cloro con fragancia',
+                minStock: 4
+            },
+            {
+                code: '7506306234567',
+                name: 'Jabón Dove 90g',
+                category: 'cuidado-personal',
+                price: 18.00,
+                stock: 20,
+                description: 'Jabón de baño',
+                minStock: 10
+            },
+            {
+                code: '7501055301456',
+                name: 'Mantequilla Lurpak 200g',
+                category: 'lacteos',
+                price: 45.00,
+                stock: 9,
+                description: 'Mantequilla sin sal',
+                minStock: 5
+            },
+            {
+                code: '7501033915678',
+                name: 'Jugo Del Valle 1L',
+                category: 'bebidas',
+                price: 24.00,
+                stock: 18,
+                description: 'Jugo de naranja',
+                minStock: 10
+            },
+            {
+                code: '7501055313456',
+                name: 'Crema Lala 250ml',
+                category: 'lacteos',
+                price: 22.00,
+                stock: 12,
+                description: 'Crema para cocinar',
+                minStock: 6
+            },
+            {
+                code: '7501050624567',
+                name: 'Pan Integral Bimbo',
+                category: 'panaderia',
+                price: 45.00,
+                stock: 10,
+                description: 'Pan de caja integral',
+                minStock: 6
+            },
+            {
+                code: '7501050789123',
+                name: 'Galletas Emperador Chocolate',
+                category: 'dulces',
+                price: 20.00,
+                stock: 15,
+                description: 'Galletas con chocolate',
+                minStock: 8
+            },
+            // Continúa con más productos...
+            {
+                code: '7501055300678',
+                name: 'Yoghurt Yoplait Fresa 1kg',
+                category: 'lacteos',
+                price: 40.00,
+                stock: 8,
+                description: 'Yoghurt sabor fresa',
+                minStock: 5
+            },
+            {
+                code: '7501033913456',
+                name: 'Sprite 600ml',
+                category: 'bebidas',
+                price: 17.00,
+                stock: 22,
+                description: 'Refresco de limón',
+                minStock: 12
+            },
+            {
+                code: '7501003124567',
+                name: 'Doritos Nacho 45g',
+                category: 'botanas',
+                price: 16.50,
+                stock: 18,
+                description: 'Totopos sabor queso',
+                minStock: 10
+            },
+            {
+                code: '7501059245345',
+                name: 'Suavitel 1L',
+                category: 'limpieza',
+                price: 32.00,
+                stock: 10,
+                description: 'Suavizante para ropa',
+                minStock: 5
+            },
+            {
+                code: '7506306235678',
+                name: 'Shampoo Head & Shoulders 400ml',
+                category: 'cuidado-personal',
+                price: 85.00,
+                stock: 12,
+                description: 'Shampoo anticaspa',
+                minStock: 6
+            },
+            {
+                code: '7501055302567',
+                name: 'Queso Oaxaca Lala 200g',
+                category: 'lacteos',
+                price: 55.00,
+                stock: 7,
+                description: 'Queso para fundir',
+                minStock: 4
+            },
+            {
+                code: '7501033916789',
+                name: 'Boing Mango 1L',
+                category: 'bebidas',
+                price: 22.00,
+                stock: 15,
+                description: 'Néctar de mango',
+                minStock: 8
+            },
+            {
+                code: '7501055314567',
+                name: 'Leche Condensada La Lechera 390g',
+                category: 'lacteos',
+                price: 28.00,
+                stock: 10,
+                description: 'Leche condensada azucarada',
+                minStock: 6
+            },
+            {
+                code: '7501050625678',
+                name: 'Pan Dulce Bimbo',
+                category: 'panaderia',
+                price: 38.00,
+                stock: 9,
+                description: 'Pan de caja dulce',
+                minStock: 5
+            },
+            {
+                code: '7501050789234',
+                name: 'Galletas Marias Gamesa',
+                category: 'dulces',
+                price: 18.00,
+                stock: 20,
+                description: 'Galletas tipo María',
+                minStock: 10
+            },
+            // Continúa con más productos...
+            {
+                code: '7501055300789',
+                name: 'Leche Deslactosada Lala 1L',
+                category: 'lacteos',
+                price: 27.00,
+                stock: 12,
+                description: 'Leche sin lactosa',
+                minStock: 7
+            },
+            {
+                code: '7501033914568',
+                name: 'Fanta 600ml',
+                category: 'bebidas',
+                price: 17.00,
+                stock: 18,
+                description: 'Refresco de naranja',
+                minStock: 10
+            },
+            {
+                code: '7501003125678',
+                name: 'Cheetos Torciditos 45g',
+                category: 'botanas',
+                price: 15.50,
+                stock: 15,
+                description: 'Botana sabor queso',
+                minStock: 8
+            },
+            {
+                code: '7501059245456',
+                name: 'Jabón en polvo Roma 1kg',
+                category: 'limpieza',
+                price: 38.00,
+                stock: 8,
+                description: 'Detergente para ropa',
+                minStock: 4
+            },
+            {
+                code: '7506306236789',
+                name: 'Desodorante Dove Original 45g',
+                category: 'cuidado-personal',
+                price: 42.00,
+                stock: 14,
+                description: 'Desodorante roll-on',
+                minStock: 8
+            },
+            {
+                code: '7501055303678',
+                name: 'Queso Panela Lala 300g',
+                category: 'lacteos',
+                price: 48.00,
+                stock: 6,
+                description: 'Queso fresco',
+                minStock: 4
+            },
+            {
+                code: '7501033917890',
+                name: 'Jumex Durazno 1L',
+                category: 'bebidas',
+                price: 24.00,
+                stock: 12,
+                description: 'Néctar de durazno',
+                minStock: 7
+            },
+            {
+                code: '7501055315678',
+                name: 'Leche en Polvo Nido 360g',
+                category: 'lacteos',
+                price: 65.00,
+                stock: 7,
+                description: 'Leche en polvo entera',
+                minStock: 4
+            },
+            {
+                code: '7501050626789',
+                name: 'Pan Tostado Bimbo',
+                category: 'panaderia',
+                price: 40.00,
+                stock: 8,
+                description: 'Pan tostado',
+                minStock: 5
+            },
+            {
+                code: '7501050789345',
+                name: 'Chocolates Abuelita 90g',
+                category: 'dulces',
+                price: 25.00,
+                stock: 15,
+                description: 'Chocolate para mesa',
+                minStock: 8
+            },
+            // Continúa con más productos...
+            {
+                code: '7501055300890',
+                name: 'Leche Light Alpura 1L',
+                category: 'lacteos',
+                price: 26.00,
+                stock: 10,
+                description: 'Leche baja en grasa',
+                minStock: 6
+            },
+            {
+                code: '7501033915679',
+                name: 'Sidral Mundet 600ml',
+                category: 'bebidas',
+                price: 19.00,
+                stock: 14,
+                description: 'Refresco de manzana',
+                minStock: 8
+            },
+            {
+                code: '7501003126789',
+                name: 'Rancheritos 45g',
+                category: 'botanas',
+                price: 14.00,
+                stock: 16,
+                description: 'Botana sabor chile y limón',
+                minStock: 9
+            },
+            {
+                code: '7501059245567',
+                name: 'Lavatrastes Axion 500ml',
+                category: 'limpieza',
+                price: 25.00,
+                stock: 12,
+                description: 'Detergente para trastes',
+                minStock: 6
+            },
+            {
+                code: '7506306237890',
+                name: 'Pasta Dental Sensodyne 90g',
+                category: 'cuidado-personal',
+                price: 55.00,
+                stock: 10,
+                description: 'Pasta para dientes sensibles',
+                minStock: 6
+            },
+            {
+                code: '7501055304789',
+                name: 'Queso Manchego Lala 200g',
+                category: 'lacteos',
+                price: 60.00,
+                stock: 5,
+                description: 'Queso tipo manchego',
+                minStock: 3
+            },
+            {
+                code: '7501033918901',
+                name: 'Agua Mineral Peñafiel 1L',
+                category: 'bebidas',
+                price: 15.00,
+                stock: 20,
+                description: 'Agua mineral natural',
+                minStock: 12
+            },
+            {
+                code: '7501055316789',
+                name: 'Crema Chantilly Lala 200ml',
+                category: 'lacteos',
+                price: 32.00,
+                stock: 8,
+                description: 'Crema para batir',
+                minStock: 5
+            },
+            {
+                code: '7501050627890',
+                name: 'Pan Multigrano Bimbo',
+                category: 'panaderia',
+                price: 48.00,
+                stock: 7,
+                description: 'Pan con múltiples cereales',
+                minStock: 4
+            },
+            {
+                code: '7501050789456',
+                name: 'Mazapanes De La Rosa 30g',
+                category: 'dulces',
+                price: 8.00,
+                stock: 30,
+                description: 'Mazapán de cacahuate',
+                minStock: 15
+            },
+            // Continúa con más productos...
+            {
+                code: '7501055301901',
+                name: 'Yoghurt Griego Alpura 1kg',
+                category: 'lacteos',
+                price: 65.00,
+                stock: 6,
+                description: 'Yoghurt estilo griego',
+                minStock: 4
+            },
+            {
+                code: '7501033916780',
+                name: 'Jugo Del Valle Piña 1L',
+                category: 'bebidas',
+                price: 24.00,
+                stock: 10,
+                description: 'Jugo de piña',
+                minStock: 6
+            },
+            {
+                code: '7501003127890',
+                name: 'Fritos Sal y Limón 45g',
+                category: 'botanas',
+                price: 14.50,
+                stock: 12,
+                description: 'Botana de maíz',
+                minStock: 7
+            },
+            {
+                code: '7501059245678',
+                name: 'Desinfectante Fabuloso 500ml',
+                category: 'limpieza',
+                price: 28.00,
+                stock: 15,
+                description: 'Desinfectante multiusos',
+                minStock: 8
+            },
+            {
+                code: '7506306238901',
+                name: 'Enjuague Bucal Listerine 250ml',
+                category: 'cuidado-personal',
+                price: 65.00,
+                stock: 9,
+                description: 'Enjuague bucal antiséptico',
+                minStock: 5
+            },
+            {
+                code: '7501055305890',
+                name: 'Queso Gouda Lala 200g',
+                category: 'lacteos',
+                price: 62.00,
+                stock: 4,
+                description: 'Queso tipo gouda',
+                minStock: 3
+            },
+            {
+                code: '7501033919012',
+                name: 'Cerveza Corona 355ml',
+                category: 'bebidas-alcoholicas',
+                price: 25.00,
+                stock: 36,
+                description: 'Cerveza clara',
+                minStock: 20
+            },
+            {
+                code: '7501055317890',
+                name: 'Leche Evaporada Carnation 360g',
+                category: 'lacteos',
+                price: 30.00,
+                stock: 10,
+                description: 'Leche evaporada',
+                minStock: 6
+            },
+            {
+                code: '7501050628901',
+                name: 'Pan de Hot Dog Bimbo',
+                category: 'panaderia',
+                price: 35.00,
+                stock: 12,
+                description: 'Pan para hot dogs',
+                minStock: 7
+            },
+            {
+                code: '7501050789567',
+                name: 'Gomitas Trululú 100g',
+                category: 'dulces',
+                price: 18.00,
+                stock: 20,
+                description: 'Gomitas de sabores',
+                minStock: 10
+            },
+            // Últimos 10 productos...
+            {
+                code: '7501055302012',
+                name: 'Leche de Almendras Silk 1L',
+                category: 'lacteos',
+                price: 55.00,
+                stock: 8,
+                description: 'Bebida de almendras',
+                minStock: 5
+            },
+            {
+                code: '7501033917891',
+                name: 'Vino Tinto Concha y Toro 750ml',
+                category: 'bebidas-alcoholicas',
+                price: 150.00,
+                stock: 12,
+                description: 'Vino tinto reservado',
+                minStock: 6
+            },
+            {
+                code: '7501003128901',
+                name: 'Cacahuates Japoneses 100g',
+                category: 'botanas',
+                price: 20.00,
+                stock: 15,
+                description: 'Cacahuates estilo japonés',
+                minStock: 8
+            },
+            {
+                code: '7501059245789',
+                name: 'Toallas Fem Sanitas Nocturnas',
+                category: 'cuidado-personal',
+                price: 45.00,
+                stock: 10,
+                description: 'Toallas femeninas',
+                minStock: 6
+            },
+            {
+                code: '7506306239012',
+                name: 'Rastrillos Gillette 3 unidades',
+                category: 'cuidado-personal',
+                price: 85.00,
+                stock: 8,
+                description: 'Rastrillos desechables',
+                minStock: 5
+            },
+            {
+                code: '7501055306901',
+                name: 'Queso Parmesano Lala 100g',
+                category: 'lacteos',
+                price: 45.00,
+                stock: 6,
+                description: 'Queso parmesano rallado',
+                minStock: 4
+            },
+            {
+                code: '7501033910123',
+                name: 'Tequila José Cuervo Especial 750ml',
+                category: 'bebidas-alcoholicas',
+                price: 220.00,
+                stock: 8,
+                description: 'Tequila reposado',
+                minStock: 4
+            },
+            {
+                code: '7501055318901',
+                name: 'Leche en Polvo Klim 400g',
+                category: 'lacteos',
+                price: 75.00,
+                stock: 6,
+                description: 'Leche en polvo descremada',
+                minStock: 4
+            },
+            {
+                code: '7501050629012',
+                name: 'Pan para Hamburguesa Bimbo',
+                category: 'panaderia',
+                price: 38.00,
+                stock: 10,
+                description: 'Pan para hamburguesas',
+                minStock: 6
+            },
+            {
+                code: '7501050789678',
+                name: 'Chocolate Hershey\'s 50g',
+                category: 'dulces',
+                price: 15.00,
+                stock: 25,
+                description: 'Tableta de chocolate',
+                minStock: 12
+            }
+        ];
+        
+        // Current user info
+        let currentUser = null;
+        
+        // DOM Elements
+        const authScreen = document.getElementById('auth-screen');
+        const app = document.getElementById('app');
+        const logoutBtn = document.getElementById('logout-btn');
+        const adminLoginBtn = document.getElementById('admin-login');
+        const userLoginBtn = document.getElementById('user-login');
+        
+        // Tab elements
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const registerTab = document.getElementById('register-tab');
+        const editTab = document.getElementById('edit-tab');
+        
+        // Barcode scanner elements
+        const barcodeScanner = document.getElementById('barcode-scanner');
+        const startScannerBtn = document.getElementById('start-scanner');
+        const stopScannerBtn = document.getElementById('stop-scanner');
+        const manualBarcodeInput = document.getElementById('manual-barcode');
+        const manualSearchBtn = document.getElementById('manual-search');
+        const productInfo = document.getElementById('product-info');
+        const productDetails = document.getElementById('product-details');
+        const closeInfoBtn = document.getElementById('close-info');
+        const scanForRegisterBtn = document.getElementById('scan-for-register');
+        
+        // Products list elements
+        const productsTableBody = document.getElementById('products-table-body');
+        const productSearchInput = document.getElementById('product-search');
+        const productFilterSelect = document.getElementById('product-filter');
+        const productsPrevBtn = document.getElementById('products-prev');
+        const productsNextBtn = document.getElementById('products-next');
+        
+        // Register product elements
+        const registerForm = document.getElementById('register-form');
+        const productCodeInput = document.getElementById('product-code');
+        
+        // Edit product elements
+        const searchEditProductInput = document.getElementById('search-edit-product');
+        const searchEditBtn = document.getElementById('search-edit-btn');
+        const editProductsList = document.getElementById('edit-products-list');
+        const editProductFormContainer = document.getElementById('edit-product-form-container');
+        const editProductForm = document.getElementById('edit-product-form');
+        const cancelEditBtn = document.getElementById('cancel-edit');
+        
+        // HTML5 QR code scanner
+        let html5QrCode;
+        let scannerActive = false;
+        
+        // Initialize the application
+        function init() {
+            // Event listeners for login
+            adminLoginBtn.addEventListener('click', () => login('admin'));
+            userLoginBtn.addEventListener('click', () => login('consultor'));
+            logoutBtn.addEventListener('click', logout);
+            
+            // Tab switching
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            
+            // Barcode scanner events
+            startScannerBtn.addEventListener('click', startScanner);
+            stopScannerBtn.addEventListener('click', stopScanner);
+            manualSearchBtn.addEventListener('click', manualSearch);
+            closeInfoBtn.addEventListener('click', () => productInfo.classList.add('hidden'));
+            scanForRegisterBtn.addEventListener('click', startScannerForRegister);
+            
+            // Products list events
+            productSearchInput.addEventListener('input', filterProducts);
+            productFilterSelect.addEventListener('change', filterProducts);
+            productsPrevBtn.addEventListener('click', () => changePage(-1));
+            productsNextBtn.addEventListener('click', () => changePage(1));
+            
+            // Register product events
+            registerForm.addEventListener('submit', registerNewProduct);
+            
+            // Edit product events
+            searchEditBtn.addEventListener('click', searchProductsForEdit);
+            searchEditProductInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchProductsForEdit();
+            });
+            cancelEditBtn.addEventListener('click', cancelEdit);
+            editProductForm.addEventListener('submit', updateProduct);
+            
+            // Initialize products list
+            renderProductsTable();
+        }
+        
+        // Login function
+        function login(role) {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                alert('Por favor ingrese usuario y contraseña');
+                return;
+            }
+            
+            // Simple validation (in a real app, this would call an API)
+            currentUser = {
+                username,
+                role
+            };
+            
+            // Hide auth screen and show app
+            authScreen.classList.add('hidden');
+            app.classList.remove('hidden');
+            
+            // Set appropriate UI based on user role
+            if (role === 'admin') {
+                // Admin has access to all tabs
+                document.getElementById('register-tab').style.display = 'block';
+                document.getElementById('edit-tab').style.display = 'block';
+            } else {
+                // Consultant can only view scanner and products
+                document.getElementById('register-tab').style.display = 'none';
+                document.getElementById('edit-tab').style.display = 'none';
+                
+                // Set first available tab active
+                switchTab('barcode');
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            currentUser = null;
+            authScreen.classList.remove('hidden');
+            app.classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            stopScanner(); // Stop scanner if active
+        }
+        
+        // Switch between tabs
+        function switchTab(tabId) {
+            // Hide all tab contents and remove active class from all tabs
+            tabContents.forEach(content => content.classList.add('hidden'));
+            tabBtns.forEach(btn => btn.classList.remove('active-tab', 'text-gray-900', 'border-blue-500'));
+            
+            // Show the selected tab content and add active class to the button
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            
+            // Find the button that matches the tabId and activate it
+            const activeBtn = Array.from(tabBtns).find(btn => btn.dataset.tab === tabId);
+            if (activeBtn) {
+                activeBtn.classList.add('active-tab', 'text-gray-900', 'border-blue-500');
+            }
+            
+            // If the barcode tab is selected and scanner is not active, reset the scanner UI
+            if (tabId === 'barcode' && !scannerActive) {
+                barcodeScanner.innerHTML = '<p class="text-gray-500">El escáner se activará aquí</p>';
+                productInfo.classList.add('hidden');
+                startScannerBtn.classList.remove('hidden');
+                stopScannerBtn.classList.add('hidden');
+            }
+        }
+        
+        // Barcode scanner functions
+        function startScanner() {
+            // Clear any previous scanner
+            if (html5QrCode) {
+                html5QrCode.clear();
+            }
+            
+            // Create new scanner
+            html5QrCode = new Html5Qrcode("barcode-scanner");
+            
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                stopScanner();
+                searchProduct(decodedText);
+            };
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                qrCodeSuccessCallback,
+                (errorMessage) => {
+                    // Handle parse errors if needed
+                }
+            ).then(() => {
+                scannerActive = true;
+                startScannerBtn.classList.add('hidden');
+                stopScannerBtn.classList.remove('hidden');
+            }).catch(err => {
+                alert('Error al iniciar el escáner: ' + err);
+            });
+        }
+        
+        function startScannerForRegister() {
+            // Clear any previous scanner
+            if (html5QrCode) {
+                html5QrCode.clear();
+            }
+            
+            // Create new scanner
+            html5QrCode = new Html5Qrcode("barcode-scanner");
+            
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                stopScanner();
+                productCodeInput.value = decodedText;
+                // Focus on next field for better UX
+                document.getElementById('product-name').focus();
+            };
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            // Show scanner in a modal or alert since we're not on the scanner tab
+            const scannerContainer = document.createElement('div');
+            scannerContainer.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
+            scannerContainer.innerHTML = `
+                <div class="bg-white rounded-lg p-4 max-w-md w-full">
+                    <h3 class="text-lg font-bold mb-2">Escaneando código de barras</h3>
+                    <div id="register-scanner" class="w-full h-64 mb-4"></div>
+                    <button id="close-register-scanner" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700">
+                        Cancelar
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(scannerContainer);
+            
+            const closeBtn = scannerContainer.querySelector('#close-register-scanner');
+            closeBtn.addEventListener('click', () => {
+                stopScanner();
+                scannerContainer.remove();
+            });
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                qrCodeSuccessCallback,
+                (errorMessage) => {
+                    // Handle parse errors if needed
+                }
+            ).then(() => {
+                scannerActive = true;
+            }).catch(err => {
+                alert('Error al iniciar el escáner: ' + err);
+                scannerContainer.remove();
+            });
+        }
+        
+        function stopScanner() {
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => {
+                    scannerActive = false;
+                    html5QrCode.clear();
+                    startScannerBtn.classList.remove('hidden');
+                    stopScannerBtn.classList.add('hidden');
+                }).catch(err => {
+                    console.error("Error al detener el escáner", err);
+                });
+            }
+        }
+        
+        function manualSearch() {
+            const barcode = manualBarcodeInput.value.trim();
+            if (barcode) {
+                searchProduct(barcode);
+                manualBarcodeInput.value = '';
+            }
+        }
+        
+        function searchProduct(barcode) {
+            const product = products.find(p => p.code === barcode);
+            
+            if (product) {
+                // Clear previous details
+                productDetails.innerHTML = '';
+                
+                // Add product details
+                const details = [
+                    { label: 'Código', value: product.code },
+                    { label: 'Nombre', value: product.name },
+                    { label: 'Categoría', value: getCategoryName(product.category) },
+                    { label: 'Precio', value: `$${product.price.toFixed(2)}` },
+                    { label: 'Stock', value: product.stock },
+                    { label: 'Descripción', value: product.description }
+                ];
+                
+                details.forEach(detail => {
+                    if (detail.value) {
+                        const detailElement = document.createElement('div');
+                        detailElement.className = 'mb-2';
+                        detailElement.innerHTML = `
+                            <span class="font-medium text-gray-700">${detail.label}:</span>
+                            <span class="text-gray-900"> ${detail.value}</span>
+                        `;
+                        productDetails.appendChild(detailElement);
+                    }
+                });
+                
+                // Show product info
+                productInfo.classList.remove('hidden');
+            } else {
+                alert('Producto no encontrado');
+            }
+        }
+        
+        function getCategoryName(category) {
+            const categories = {
+                'electronics': 'Electrónicos',
+                'food': 'Alimentos',
+                'beverages': 'Bebidas',
+                'cleaning': 'Limpieza',
+                'personal-care': 'Cuidado personal',
+                'other': 'Otros'
+            };
+            return categories[category] || category;
+        }
+        
+        // Products list functions
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let filteredProducts = [...products];
+        
+        function renderProductsTable(productsToRender = filteredProducts) {
+            productsTableBody.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedProducts = productsToRender.slice(startIndex, endIndex);
+            
+            if (paginatedProducts.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        No se encontraron productos
+                    </td>
+                `;
+                productsTableBody.appendChild(emptyRow);
+            } else {
+                paginatedProducts.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    
+                    // Determine stock status
+                    let stockStatus = '';
+                    let statusClass = '';
+                    
+                    if (product.stock <= 5) {
+                        stockStatus = 'Bajo stock';
+                        statusClass = 'bg-red-100 text-red-800';
+                    } else if (product.stock <= 15) {
+                        stockStatus = 'Stock moderado';
+                        statusClass = 'bg-yellow-100 text-yellow-800';
+                    } else {
+                        stockStatus = 'Stock alto';
+                        statusClass = 'bg-green-100 text-green-800';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.code}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getCategoryName(product.category)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${product.price.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.stock}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                ${stockStatus}
+                            </span>
+                        </td>
+                    `;
+                    
+                    productsTableBody.appendChild(row);
+                });
+            }
+            
+            // Update pagination info
+            document.getElementById('products-start').textContent = startIndex + 1;
+            document.getElementById('products-end').textContent = Math.min(endIndex, productsToRender.length);
+            document.getElementById('products-total').textContent = productsToRender.length;
+            
+            // Update pagination buttons
+            productsPrevBtn.disabled = currentPage === 1;
+            productsNextBtn.disabled = endIndex >= productsToRender.length;
+        }
+        
+        function filterProducts() {
+            const searchTerm = productSearchInput.value.toLowerCase();
+            const filterValue = productFilterSelect.value;
+            
+            filteredProducts = products.filter(product => {
+                // Search filter
+                const matchesSearch = 
+                    product.code.includes(searchTerm) || 
+                    product.name.toLowerCase().includes(searchTerm) || 
+                    getCategoryName(product.category).toLowerCase().includes(searchTerm);
+                
+                // Stock filter
+                let matchesStock = true;
+                switch(filterValue) {
+                    case 'low':
+                        matchesStock = product.stock <= 5;
+                        break;
+                    case 'medium':
+                        matchesStock = product.stock > 5 && product.stock <= 15;
+                        break;
+                    case 'high':
+                        matchesStock = product.stock > 15;
+                        break;
+                    default:
+                        matchesStock = true;
+                }
+                
+                return matchesSearch && matchesStock;
+            });
+            
+            currentPage = 1;
+            renderProductsTable();
+        }
+        
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            
+            if (newPage > 0 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderProductsTable();
+            }
+        }
+        
+        // Register new product
+        function registerNewProduct(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('product-code').value;
+            const name = document.getElementById('product-name').value;
+            const category = document.getElementById('product-category').value;
+            const price = parseFloat(document.getElementById('product-price').value);
+            const stock = parseInt(document.getElementById('product-stock').value);
+            const description = document.getElementById('product-description').value;
+            // Note: Image handling would be added in a real application
+            
+            // Validate inputs
+            if (!code || !name || isNaN(price) || isNaN(stock)) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            // Check if product with this code already exists
+            if (products.some(p => p.code === code)) {
+                alert('Ya existe un producto con este código de barras');
+                return;
+            }
+            
+            // Add new product
+            const newProduct = {
+                code,
+                name,
+                category,
+                price,
+                stock,
+                description
+            };
+            
+            products.push(newProduct);
+            
+            // Reset form
+            registerForm.reset();
+            
+            // Show success message
+            alert('Producto registrado exitosamente');
+            
+            // Update products list
+            filterProducts();
+            
+            // Switch to products tab to see the new product
+            switchTab('products');
+        }
+        
+        // Edit product functions
+        function searchProductsForEdit() {
+            const searchTerm = searchEditProductInput.value.toLowerCase();
+            
+            // Clear previous results
+            editProductsList.innerHTML = '';
+            
+            if (!searchTerm) {
+                return;
+            }
+            
+            const matchedProducts = products.filter(product => 
+                product.code.includes(searchTerm) || 
+                product.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (matchedProducts.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="3" class="px-4 py-2 text-center text-gray-500">
+                        No se encontraron productos
+                    </td>
+                `;
+                editProductsList.appendChild(emptyRow);
+            } else {
+                matchedProducts.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${product.code}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${product.name}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                            <button class="select-product-btn text-blue-600 hover:text-blue-800" data-code="${product.code}">
+                                Seleccionar
+                            </button>
+                        </td>
+                    `;
+                    editProductsList.appendChild(row);
+                });
+                
+                // Add event listeners to select buttons
+                document.querySelectorAll('.select-product-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const productCode = btn.dataset.code;
+                        loadProductForEdit(productCode);
+                    });
+                });
+            }
+        }
+        
+        function loadProductForEdit(code) {
+            const product = products.find(p => p.code === code);
+            if (product) {
+                document.getElementById('edit-product-code').value = product.code;
+                document.getElementById('edit-product-name').value = product.name;
+                document.getElementById('edit-product-category').value = product.category;
+                document.getElementById('edit-product-price').value = product.price;
+                document.getElementById('edit-product-stock').value = product.stock;
+                document.getElementById('edit-product-description').value = product.description || '';
+                
+                // Show the edit form
+                editProductFormContainer.classList.remove('hidden');
+                
+                // Scroll to form
+                editProductFormContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        function cancelEdit() {
+            editProductFormContainer.classList.add('hidden');
+            editProductForm.reset();
+        }
+        
+        function updateProduct(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('edit-product-code').value;
+            const name = document.getElementById('edit-product-name').value;
+            const category = document.getElementById('edit-product-category').value;
+            const price = parseFloat(document.getElementById('edit-product-price').value);
+            const stock = parseInt(document.getElementById('edit-product-stock').value);
+            const description = document.getElementById('edit-product-description').value;
+            
+            // Find the product index
+            const productIndex = products.findIndex(p => p.code === code);
+            
+            if (productIndex !== -1) {
+                // Update the product
+                products[productIndex] = {
+                    ...products[productIndex],
+                    name,
+                    category,
+                    price,
+                    stock,
+                    description
+                };
+                
+                // Hide the form and reset
+                editProductFormContainer.classList.add('hidden');
+                editProductForm.reset();
+                searchEditProductInput.value = '';
+                editProductsList.innerHTML = '';
+                
+                // Update products list and barcode search if on those tabs
+                filterProducts();
+                
+                // Show success message
+                alert('Producto actualizado exitosamente');
+            }
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                console.log('ServiceWorker registration successful');
+                })
+                .catch(err => {
+                console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        // Mostrar el botón de instalación
+        let deferredPrompt;
+        const installButton = document.createElement('button');
+        installButton.innerHTML = 'Instalar App';
+        installButton.className = 'fixed bottom-4 right-4 bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg z-50 hidden';
+        installButton.id = 'installButton';
+        document.body.appendChild(installButton);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.classList.remove('hidden');
+            
+            installButton.addEventListener('click', () => {
+            installButton.classList.add('hidden');
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted install prompt');
+                } else {
+                console.log('User dismissed install prompt');
+                }
+                deferredPrompt = null;
+            });
+            });
+        });
+
+    </script>
+</body>
+</html>
